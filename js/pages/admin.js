@@ -1,6 +1,6 @@
-import { requireLogin, requireAdmin, logout } from "../auth.js";
+import { requireAdmin } from "../auth.js";
 import { api, getUser } from "../api.js";
-import { qs, setText, showError, escapeHTML } from "../ui.js";
+import { qs, showError } from "../ui.js";
 
 requireLogin();
 requireAdmin();
