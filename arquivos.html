@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>LINC — Arquivos</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<header>
+  <div><b>LINC</b> <span class="small" id="who"></span></div>
+  <div>
+    <nav>
+      <a href="dashboard.html">Aulas</a>
+      <a href="notas.html">Notas</a>
+      <a href="chat.html">Chat</a>
+      <a href="arquivos.html">Arquivos</a>
+      <a href="data.html">Dados</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="card">
+    <h3>Enviar arquivo (registro + monitoramento)</h3>
+    <p class="small">
+      V1 recomendada: você faz upload no Drive e cola o link aqui.
+      O sistema registra, organiza e audita (sem apagar de verdade).
+    </p>
+
+    <div class="row">
+      <div class="col">
+        <label>Visibilidade</label>
+        <select id="vis">
+          <option value="privado">Privado</option>
+          <option value="grupo">Grupo</option>
+          <option value="turma">Turma</option>
+        </select>
+      </div>
+      <div class="col">
+        <label>Aula (opcional)</label>
+        <input id="aula_id" placeholder="1..15 ou vazio"/>
+      </div>
+      <div class="col">
+        <label>Nome</label>
+        <input id="nome" placeholder="Ex: Dados ANOVA exemplo"/>
+      </div>
+    </div>
+
+    <label>Link do arquivo no Drive</label>
+    <input id="link" placeholder="Cole o link compartilhável do Drive"/>
+
+    <button id="btnAdd">Registrar arquivo</button>
+    <div class="small" id="status"></div>
+  </div>
+
+  <div class="card">
+    <h3>Listar arquivos</h3>
+    <div class="row">
+      <div class="col">
+        <label>Escopo</label>
+        <select id="scope">
+          <option value="meus">Meus</option>
+          <option value="grupo">Grupo</option>
+          <option value="turma">Turma</option>
+          <option value="aula">Por Aula</option>
+        </select>
+      </div>
+      <div class="col">
+        <label>Aula (se escopo=aula)</label>
+        <input id="filterAula" placeholder="1..15"/>
+      </div>
+    </div>
+    <button id="btnList">Carregar</button>
+    <div id="listBox" style="margin-top:10px;"></div>
+  </div>
+</main>
+
+<script type="module" src="js/pages/arquivos.js"></script>
+</body>
+</html>
