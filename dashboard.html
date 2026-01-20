@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>LINC — Aulas</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<header>
+  <div><b>LINC</b> <span class="small" id="who"></span></div>
+  <div>
+    <nav>
+      <a href="dashboard.html">Aulas</a>
+      <a href="chat.html">Chat</a>
+      <a href="arquivos.html">Arquivos</a>
+      <a href="data.html">Dados</a>
+    </nav>
+    <button id="btnLogout" style="width:auto;">Sair</button>
+  </div>
+</header>
+
+<main>
+  <div class="card">
+    <h2>Aulas (1–15)</h2>
+    <p class="small">
+      Cada aula tem teoria + checkpoint + atividade. Seu progresso vai sendo registrado.
+    </p>
+  </div>
+
+  <div id="aulasBox"></div>
+</main>
+
+<script type="module" src="js/pages/dashboard.js"></script>
+</body>
+</html>
