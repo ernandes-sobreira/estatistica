@@ -1,6 +1,7 @@
 import { requireLogin } from "../auth.js";
-import { api, getUser } from "../api.js";
-import { qs, setText, showError, escapeHTML } from "../ui.js";
+import { api } from "../api.js";
+import { qs, showError } from "../ui.js";
+
 
 requireLogin();
 const u = getUser();
