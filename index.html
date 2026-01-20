@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>LINC — Login</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+<header>
+  <div><b>LINC</b> <span class="small">— Entre a dúvida e a busca do erro mínimo</span></div>
+</header>
+
+<main>
+  <div class="card">
+    <h2>Entrar</h2>
+    <p class="small">
+      Use <b>Turma + Apelido + Código</b>.  
+      (O código pode ser trocado depois pelo professor.)
+    </p>
+
+    <label>Turma</label>
+    <input id="turma" placeholder="Ex: LINC-01"/>
+
+    <label>Apelido</label>
+    <input id="apelido" placeholder="Ex: prof_linc ou aluno25"/>
+
+    <label>Código</label>
+    <input id="codigo" type="password" placeholder="Seu código"/>
+
+    <button id="btnLogin">Entrar</button>
+    <div class="small" id="status" style="margin-top:10px;"></div>
+
+    <hr/>
+    <p class="small">
+      Professor: depois você consegue criar alunos, grupos, aulas e avaliações no painel Admin.
+    </p>
+  </div>
+</main>
+
+<script type="module" src="js/pages/login.js"></script>
+</body>
+</html>
