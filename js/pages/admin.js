@@ -220,3 +220,30 @@ qs("#btnLoadLogs").addEventListener("click", async () => {
     ).join("") || "<div class='small'>Sem logs.</div>";
   } catch(e){ showError("Endpoint /admin/logs ainda não implementado no backend (ok para V1)."); }
 });
+// Criar aluno (admin)
+qs("#btnCreateUser")?.addEventListener("click", async () => {
+  try {
+    setText("#createUserStatus", "Criando...");
+    const apelido = qs("#newApelido").value.trim();
+    const email = qs("#newEmail").value.trim();
+    const codigo = qs("#newCodigo").value.trim();
+    if (!apelido || !codigo) throw new Error("Apelido e código são obrigatórios.");
+
+    const r = await api.adminCreateUser({
+      turma_id: u.turma_id,
+      apelido,
+      email,
+      codigo,
+      role: "student"
+    });
+
+    setText("#createUserStatus", `OK. Aluno criado: ${r.user_id}`);
+    qs("#newApelido").value = "";
+    qs("#newEmail").value = "";
+    qs("#newCodigo").value = "";
+  } catch(e) {
+    setText("#createUserStatus", "");
+    showError(e.message);
+  }
+});
+
