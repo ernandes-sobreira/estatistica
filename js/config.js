@@ -1,6 +1,6 @@
 // js/config.js
 export const SCRIPT_URL =
-  "https://script.google.com/macros/s/AKfycbxPgnQyfUlcgd2cr98kD_AXaxTBBStUt9Z5jAty_B5VDmXD4ldJTV8vcyXinNveB7MFSg/exec?path=";
+  "https://script.google.com/macros/s/AKfycbwQMkZoiYr_N1a8goOpKYdU51LysgbnPpgp92e-us0E_-_itxLczKcqvZnShm-4JgzuXw/exec";
 
 // chaves no localStorage
 export const TOKEN_KEY = "linc_token";
