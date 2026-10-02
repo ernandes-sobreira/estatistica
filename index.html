@@ -3,27 +3,352 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#0b5d52">
+<meta name="theme-color" content="#ffffff">
 <title>Guia de Pesquisa — Projeto em Ação</title>
-<meta http-equiv="refresh" content="0; url=https://script.google.com/macros/s/AKfycbyXJr1LRqzJmHjV60TDKE9nuV-oQXmneQwconqIdE7GBDyPEK2chJQpd2Ykpb0uBx2i/exec">
 <style>
-html,body{height:100%;margin:0}
-body{display:grid;place-items:center;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;background:#f4f7f5;color:#17312d}
-.card{max-width:620px;margin:24px;padding:30px;background:#fff;border:1px solid #dce7e3;border-radius:20px;box-shadow:0 16px 40px #17312d14;text-align:center}
-.logo{width:56px;height:56px;border-radius:16px;background:#0b5d52;color:#fff;display:grid;place-items:center;font-weight:900;font-size:24px;margin:0 auto 16px}
-h1{font-size:26px;margin:0 0 10px}p{line-height:1.55;opacity:.78}
-a{display:inline-block;margin-top:12px;padding:12px 18px;border-radius:11px;background:#0b5d52;color:#fff;text-decoration:none;font-weight:800}
-small{display:block;margin-top:16px;opacity:.55}
+:root{
+  --bg:#f7f8fb;--panel:#fff;--ink:#17212f;--muted:#64748b;--line:#e7eaf0;
+  --cyan:#13c7d3;--cyan2:#64edf3;--orange:#ff5a17;--pink:#d946ef;--purple:#7c3aed;
+  --green:#17b26a;--shadow:0 14px 34px rgba(31,41,55,.08);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:
+radial-gradient(circle at 4% 7%,rgba(255,130,100,.16),transparent 25%),
+radial-gradient(circle at 48% 8%,rgba(64,224,208,.15),transparent 26%),
+radial-gradient(circle at 91% 8%,rgba(132,94,247,.14),transparent 25%),
+var(--bg);color:var(--ink)}
+button,input,textarea{font:inherit}
+button{cursor:pointer}
+header{
+  position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:14px;min-height:82px;padding:14px max(22px,calc((100vw - 1360px)/2));
+  background:rgba(255,255,255,.91);backdrop-filter:blur(16px);border-bottom:1px solid rgba(231,234,240,.9)
+}
+.brand{display:flex;align-items:center;gap:14px;min-width:0;flex:1}
+.logo{width:42px;height:42px;border-radius:14px;background:conic-gradient(from 140deg,var(--orange),var(--pink),#8b5cf6,#3b82f6,var(--cyan),var(--orange));box-shadow:0 8px 20px rgba(124,58,237,.18)}
+.brand h1{font-size:19px;margin:0;font-weight:800;letter-spacing:-.02em}.brand p{margin:3px 0 0;color:var(--muted);font-size:13px}
+.top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.status{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:#fff;padding:10px 14px;border-radius:16px;font-weight:700;font-size:14px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--green)}
+.btn{border:1px solid var(--line);background:#fff;color:var(--ink);padding:11px 16px;border-radius:14px;font-weight:800;box-shadow:0 2px 8px rgba(15,23,42,.03)}
+.btn:hover{transform:translateY(-1px)}
+.btn.primary{border:0;color:#fff;background:linear-gradient(100deg,var(--orange),var(--pink),var(--purple))}
+.container{max-width:1360px;margin:20px auto;padding:0 22px 60px}
+.grid{display:grid;grid-template-columns:360px 1fr;gap:18px;align-items:start}
+.card{background:rgba(255,255,255,.94);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);overflow:hidden}
+.card-h{padding:18px 20px;font-size:18px;font-weight:850;background:linear-gradient(90deg,rgba(255,109,79,.12),rgba(57,219,227,.11),rgba(139,92,246,.11));border-bottom:1px solid var(--line)}
+.sidebar{position:sticky;top:102px}
+.sidebar-body{padding:18px}
+label{display:block;font-size:13px;color:#526174;margin:0 0 7px}
+input[type=text],textarea{
+  width:100%;border:1px solid #d9dee8;border-radius:14px;background:#fff;color:#263244;padding:13px 14px;outline:none;transition:.2s;box-shadow:inset 0 1px 2px rgba(15,23,42,.02)
+}
+input[type=text]:focus,textarea:focus{border-color:#67dfe7;box-shadow:0 0 0 4px rgba(19,199,211,.11)}
+textarea{min-height:102px;resize:vertical;line-height:1.45}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.entry-actions{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.enter{border:0;border-radius:14px;background:linear-gradient(90deg,#0ebecd,#66edf2);font-weight:900;padding:13px}
+.nav{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
+.nav button{border:1px solid #dce2eb;background:#fff;border-radius:13px;padding:10px 13px;font-weight:800}
+.nav button.active{border:0;color:white;background:linear-gradient(100deg,var(--orange),var(--pink),var(--purple));box-shadow:0 8px 18px rgba(217,70,239,.18)}
+.tip{margin-top:14px;padding:12px 14px;border:1px dashed #16c7d4;border-radius:14px;background:#f8feff;font-size:13px;font-weight:750;line-height:1.45}
+.credits{margin-top:14px;font-size:12.5px;line-height:1.45;color:var(--muted)}
+.logged{display:inline-flex;align-items:center;border:1px solid var(--line);background:#fff;border-radius:16px;padding:8px 12px;font-weight:800;font-size:13px;float:right;margin-top:-8px}
+.content{min-height:700px}
+.tab{display:none}.tab.active{display:block}
+.guide{padding:16px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.field{padding:0}
+.field label{font-size:13px}
+.field label b{color:#263244}
+.panel-wrap{padding:18px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpi{border:1px solid var(--line);border-radius:18px;padding:16px;background:#fff}
+.kpi strong{display:block;font-size:28px}.kpi span{font-size:12px;color:var(--muted);font-weight:700}
+.progress{height:10px;background:#edf1f5;border-radius:99px;overflow:hidden;margin-top:10px}.progress>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--purple));border-radius:99px}
+.section-title{font-size:17px;font-weight:850;margin:22px 0 10px}
+.feedback{display:grid;gap:9px}
+.feedback div{border:1px solid var(--line);border-radius:14px;padding:12px 14px;background:#fff;line-height:1.45}
+.feedback .ok{border-color:#b7ead2;background:#f6fffa}.feedback .warn{border-color:#ffd4c2;background:#fff9f6}
+.tasks{padding:18px;display:grid;gap:10px}
+.task{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:15px;background:#fff}
+.task input{margin-top:3px;width:18px;height:18px}
+.task small{display:block;color:var(--muted);margin-top:3px}
+.draw{padding:18px}
+.canvas-wrap{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:white}
+canvas{display:block;width:100%;height:520px;touch-action:none}
+.tools{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.tools input[type=color]{width:44px;height:42px;border:1px solid var(--line);border-radius:12px;background:white;padding:4px}
+.data{padding:18px}
+pre{white-space:pre-wrap;word-break:break-word;background:#0f172a;color:#e2e8f0;border-radius:16px;padding:16px;min-height:320px;max-height:520px;overflow:auto;font-size:12.5px}
+.note{font-size:13px;color:var(--muted);line-height:1.5}
+.toast{position:fixed;right:22px;bottom:22px;z-index:50;background:#111827;color:#fff;padding:12px 16px;border-radius:13px;box-shadow:var(--shadow);opacity:0;transform:translateY(8px);pointer-events:none;transition:.25s}
+.toast.show{opacity:1;transform:translateY(0)}
+@media(max-width:980px){header{align-items:flex-start}.grid{grid-template-columns:1fr}.sidebar{position:static}.form-grid{grid-template-columns:1fr}.kpis{grid-template-columns:1fr 1fr}.top-actions{display:none}}
+@media(max-width:560px){.container{padding:0 10px 40px}.grid{gap:12px}.kpis{grid-template-columns:1fr}.row,.entry-actions{grid-template-columns:1fr}.brand p{display:none}.brand h1{font-size:16px}}
 </style>
-<script>window.location.replace("https://script.google.com/macros/s/AKfycbyXJr1LRqzJmHjV60TDKE9nuV-oQXmneQwconqIdE7GBDyPEK2chJQpd2Ykpb0uBx2i/exec");</script>
 </head>
 <body>
-<div class="card">
-<div class="logo">P</div>
-<h1>Guia de Pesquisa — Projeto em Ação</h1>
-<p>Redirecionando para o sistema ativo...</p>
-<a href="https://script.google.com/macros/s/AKfycbyXJr1LRqzJmHjV60TDKE9nuV-oQXmneQwconqIdE7GBDyPEK2chJQpd2Ykpb0uBx2i/exec">Abrir agora</a>
-<small>O redirecionamento evita o bloqueio de segurança do Google Apps Script em iframe.</small>
+<header>
+  <div class="brand">
+    <div class="logo" aria-hidden="true"></div>
+    <div><h1>Guia de Pesquisa — Projeto em Ação</h1><p>Construa, teste e refine a lógica do seu projeto científico.</p></div>
+  </div>
+  <div class="top-actions">
+    <div class="status"><span class="dot"></span> online</div>
+    <button class="btn" id="saveTop">Salvar</button>
+    <button class="btn" id="txtTop">Baixar TXT</button>
+    <button class="btn" id="jsonTop">Baixar JSON</button>
+    <button class="btn primary" id="evaluateTop">Avaliar Projeto</button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="grid">
+    <aside class="card sidebar">
+      <div class="card-h">Entrada do estudante <span class="logged" id="logged">logado: —</span></div>
+      <div class="sidebar-body">
+        <label>Código do estudante (ex: "bio_2026_ana01")</label>
+        <input id="studentCode" type="text" placeholder="Digite o código...">
+        <div class="entry-actions">
+          <button class="enter" id="enterBtn">Entrar</button>
+          <button class="btn" id="loadBtn">Carregar</button>
+        </div>
+
+        <div class="nav" id="nav">
+          <button class="active" data-tab="guia">🧭 Guia</button>
+          <button data-tab="painel">📌 Painel</button>
+          <button data-tab="tarefas">✅ Tarefas</button>
+          <button data-tab="desenhos">🎨 Desenhos</button>
+          <button data-tab="dados">📈 Dados</button>
+        </div>
+
+        <div class="tip"><b>Dica:</b> coerência mínima é pergunta → hipótese → objetivo → método → análise → resultado esperado.</div>
+        <div class="credits"><b>Créditos & uso</b><br>Plataforma organizada para fins educacionais e de gestão de pesquisa. Sugestões automatizadas não substituem orientação acadêmica.</div>
+      </div>
+    </aside>
+
+    <main class="card content">
+      <section class="tab active" id="guia">
+        <div class="card-h">Guia do Projeto</div>
+        <div class="guide">
+          <div class="form-grid" id="formGrid"></div>
+        </div>
+      </section>
+
+      <section class="tab" id="painel">
+        <div class="card-h">Painel de coerência do projeto</div>
+        <div class="panel-wrap">
+          <div class="kpis">
+            <div class="kpi"><strong id="kComplete">0%</strong><span>preenchimento</span><div class="progress"><i id="pComplete"></i></div></div>
+            <div class="kpi"><strong id="kCore">0/6</strong><span>elos centrais</span></div>
+            <div class="kpi"><strong id="kTasks">0%</strong><span>tarefas concluídas</span></div>
+            <div class="kpi"><strong id="kWords">0</strong><span>palavras registradas</span></div>
+          </div>
+          <div class="section-title">Leitura automática</div>
+          <div class="feedback" id="feedback"></div>
+        </div>
+      </section>
+
+      <section class="tab" id="tarefas">
+        <div class="card-h">Tarefas do projeto</div>
+        <div class="tasks" id="taskList"></div>
+      </section>
+
+      <section class="tab" id="desenhos">
+        <div class="card-h">Desenhos e esquemas</div>
+        <div class="draw">
+          <div class="tools">
+            <input type="color" id="penColor" value="#17212f" title="Cor">
+            <button class="btn" id="clearCanvas">Limpar</button>
+            <button class="btn" id="saveDrawing">Salvar desenho</button>
+            <button class="btn" id="downloadDrawing">Baixar PNG</button>
+          </div>
+          <div class="canvas-wrap"><canvas id="canvas" width="1200" height="700"></canvas></div>
+          <p class="note">Use este espaço para fluxogramas, hipóteses, desenho amostral, relações entre variáveis ou mapas conceituais.</p>
+        </div>
+      </section>
+
+      <section class="tab" id="dados">
+        <div class="card-h">Dados do projeto</div>
+        <div class="data">
+          <div class="tools">
+            <button class="btn" id="copyJson">Copiar JSON</button>
+            <button class="btn" id="importJson">Importar JSON</button>
+            <input id="jsonFile" type="file" accept=".json,application/json" hidden>
+          </div>
+          <p class="note">Esta versão GitHub é independente do Apps Script. Os dados são salvos no navegador por código de estudante e também podem ser exportados/importados em JSON.</p>
+          <pre id="jsonPreview">{}</pre>
+        </div>
+      </section>
+    </main>
+  </div>
 </div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const fields = [
+  {id:"tema",label:"1) Qual é o seu TEMA? (em 1–2 frases claras)",ph:"Ex: Efeito de X sobre Y em Z, no contexto de..."},
+  {id:"proposito",label:"2) Qual é seu PROPÓSITO? (o “porquê” real)",ph:"Ex: Contribuir para..., resolver..., melhorar..., subsidiar..."},
+  {id:"depois",label:"3) Quando conseguir o título, o que fará com isso?",ph:"Ex: aplicar em políticas públicas, continuar no doutorado, empreender, docência..."},
+  {id:"referencia",label:"4) Qual artigo/livro te dá arrepio (referência inspiradora)? Por quê?",ph:"Autor (ano) + o que ele muda no seu projeto"},
+  {id:"pergunta",label:"5) Qual é sua PERGUNTA CIENTÍFICA? (testável)",ph:"Ex: Em [contexto], [X] altera [Y] em [Z]?"},
+  {id:"hipoteses",label:"6) Hipóteses (H1, H2...) — o que espera e por quê?",ph:"H1: ... porque...\nH2: ... porque..."},
+  {id:"objetivos",label:"7) Objetivos (geral e específicos)",ph:"Geral: ...\nEspecífico 1: ...\nEspecífico 2: ..."},
+  {id:"metodo",label:"8) Método (amostra, desenho, variáveis, instrumentos)",ph:"Onde? Quem/o quê? Quantas amostras? Frequência? Variáveis? Instrumentos?"},
+  {id:"analise",label:"9) Como os dados serão ANALISADOS?",ph:"Ex: estatística descritiva, teste t, ANOVA, GLM, regressão, análise temática..."},
+  {id:"resultado",label:"10) Qual RESULTADO ESPERADO responde à pergunta?",ph:"Ex: Espera-se observar..., estimar..., comparar..., identificar..."},
+  {id:"limitacoes",label:"11) Quais limitações e riscos podem afetar a pesquisa?",ph:"Acesso ao campo, tamanho amostral, sazonalidade, perda de dados, vieses..."},
+  {id:"impacto",label:"12) Como saberá que o projeto teve impacto?",ph:"Indicadores, produto, artigo, aplicação, público beneficiado, mudança esperada..."}
+];
+
+const tasks = [
+  ["Delimitar o tema","Escrever o fenômeno, a população/unidade de análise e o contexto."],
+  ["Formular pergunta testável","A pergunta deve permitir coleta e análise de evidências."],
+  ["Definir hipóteses","Cada hipótese deve ter direção/expectativa e justificativa."],
+  ["Alinhar objetivos","Os objetivos devem responder diretamente à pergunta científica."],
+  ["Descrever método","Amostra, desenho, variáveis, frequência e instrumentos precisam estar explícitos."],
+  ["Planejar análise","A análise deve conversar com o tipo de variável e a hipótese."],
+  ["Definir resultado esperado","O resultado esperado deve responder à pergunta sem antecipar conclusão como certeza."],
+  ["Registrar limitações","Antecipar riscos melhora a execução e a interpretação."]
+];
+
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const toast = msg => { const t=$("#toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),1800); };
+const key = code => "projeto-em-acao::"+code.trim().toLowerCase();
+let currentCode = localStorage.getItem("pea:lastCode") || "";
+let drawDirty = false;
+
+function buildForm(){
+  const g=$("#formGrid");
+  g.innerHTML=fields.map(f=>`<div class="field"><label for="${f.id}">${f.label}</label><textarea id="${f.id}" data-field="${f.id}" placeholder="${f.ph}"></textarea></div>`).join("");
+  $$("[data-field]").forEach(el=>el.addEventListener("input",()=>{refresh(); autosave();}));
+}
+function buildTasks(){
+  $("#taskList").innerHTML=tasks.map((t,i)=>`<label class="task"><input type="checkbox" data-task="${i}"><span><b>${t[0]}</b><small>${t[1]}</small></span></label>`).join("");
+  $$("[data-task]").forEach(el=>el.addEventListener("change",()=>{refresh(); autosave();}));
+}
+function getProject(){
+  const data={version:2,studentCode:currentCode,updatedAt:new Date().toISOString(),fields:{},tasks:[],drawing:null};
+  fields.forEach(f=>data.fields[f.id]=$("#"+f.id)?.value?.trim()||"");
+  $$("[data-task]").forEach(el=>data.tasks.push(!!el.checked));
+  const saved=currentCode?JSON.parse(localStorage.getItem(key(currentCode))||"null"):null;
+  data.drawing = drawDirty ? $("#canvas").toDataURL("image/png") : (saved?.drawing||null);
+  return data;
+}
+function applyProject(data){
+  fields.forEach(f=>$("#"+f.id).value=data?.fields?.[f.id]||"");
+  $$("[data-task]").forEach((el,i)=>el.checked=!!data?.tasks?.[i]);
+  if(data?.drawing) loadDrawing(data.drawing); else clearCanvas(false);
+  refresh();
+}
+function save(show=true){
+  if(!currentCode){toast("Digite um código e clique em Entrar.");return false;}
+  localStorage.setItem(key(currentCode),JSON.stringify(getProject()));
+  localStorage.setItem("pea:lastCode",currentCode);
+  drawDirty=false;
+  if(show) toast("Projeto salvo neste navegador.");
+  refresh();
+  return true;
+}
+let autoTimer;
+function autosave(){clearTimeout(autoTimer);autoTimer=setTimeout(()=>{if(currentCode) save(false)},700);}
+function enter(){
+  const c=$("#studentCode").value.trim();
+  if(!c){toast("Digite o código do estudante.");return}
+  currentCode=c; localStorage.setItem("pea:lastCode",c); $("#logged").textContent="logado: "+c;
+  const raw=localStorage.getItem(key(c));
+  if(raw) applyProject(JSON.parse(raw)); else {applyProject({}); save(false);}
+  toast(raw?"Projeto carregado.":"Novo projeto iniciado.");
+}
+function load(){
+  const c=$("#studentCode").value.trim()||currentCode;
+  if(!c){toast("Informe o código.");return}
+  const raw=localStorage.getItem(key(c));
+  if(!raw){toast("Nenhum projeto salvo com esse código.");return}
+  currentCode=c; $("#studentCode").value=c; $("#logged").textContent="logado: "+c; applyProject(JSON.parse(raw)); toast("Projeto carregado.");
+}
+function download(name,content,type){
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([content],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)
+}
+function asText(d){
+  let s="GUIA DE PESQUISA — PROJETO EM AÇÃO\nCódigo: "+(d.studentCode||"—")+"\nAtualizado: "+d.updatedAt+"\n\n";
+  fields.forEach(f=>s+=f.label+"\n"+(d.fields[f.id]||"[não preenchido]")+"\n\n");
+  s+="TAREFAS\n"; tasks.forEach((t,i)=>s+=(d.tasks[i]?"[x] ":"[ ] ")+t[0]+"\n"); return s;
+}
+function evaluate(showToast=true){
+  const d=getProject(), vals=d.fields, fb=[];
+  const filled=fields.filter(f=>(vals[f.id]||"").length>=12).length;
+  const core=["pergunta","hipoteses","objetivos","metodo","analise","resultado"];
+  const coreOk=core.filter(k=>(vals[k]||"").length>=12).length;
+  const pct=Math.round(filled/fields.length*100);
+  if(!vals.pergunta) fb.push(["warn","A pergunta científica ainda não está definida. Ela é o eixo do restante do projeto."]);
+  if(vals.pergunta && !/[?]$/.test(vals.pergunta.trim())) fb.push(["warn","Sua pergunta científica não termina com “?”. Vale revisar se está realmente formulada como pergunta."]);
+  if(!vals.hipoteses) fb.push(["warn","As hipóteses ainda não foram registradas."]);
+  if(vals.hipoteses && !/porque|pois|devido|esper/i.test(vals.hipoteses)) fb.push(["warn","As hipóteses aparecem sem justificativa explícita. Explique por que espera cada resultado."]);
+  if(!vals.objetivos) fb.push(["warn","Os objetivos ainda não estão definidos."]);
+  if(!vals.metodo) fb.push(["warn","Sem método descrito ainda não é possível verificar se a pergunta é testável na prática."]);
+  if(vals.metodo && vals.metodo.length<60) fb.push(["warn","O método está muito curto. Procure explicitar amostra, desenho, variáveis, frequência e instrumentos."]);
+  if(!vals.analise) fb.push(["warn","Falta dizer como os dados serão analisados."]);
+  if(!vals.resultado) fb.push(["warn","Falta formular o resultado esperado ligado diretamente à pergunta."]);
+  if(coreOk===6) fb.push(["ok","Os seis elos centrais estão preenchidos: pergunta, hipótese, objetivo, método, análise e resultado esperado. Agora refine a coerência entre eles."]);
+  if(pct===100) fb.push(["ok","Todos os campos do guia estão preenchidos. O próximo passo é revisar precisão, viabilidade e consistência científica."]);
+  if(!fb.length) fb.push(["ok","Bom começo. Continue preenchendo o guia para liberar uma avaliação mais completa."]);
+  $("#feedback").innerHTML=fb.map(x=>`<div class="${x[0]}">${x[1]}</div>`).join("");
+  showTab("painel"); refresh(false);
+  if(showToast) toast("Avaliação atualizada.");
+}
+function refresh(updateFeedback=true){
+  const d=getProject(), vals=d.fields;
+  const filled=fields.filter(f=>(vals[f.id]||"").length>=12).length;
+  const pct=Math.round(filled/fields.length*100);
+  const core=["pergunta","hipoteses","objetivos","metodo","analise","resultado"];
+  const coreOk=core.filter(k=>(vals[k]||"").length>=12).length;
+  const done=d.tasks.filter(Boolean).length;
+  const words=Object.values(vals).join(" ").trim().split(/\s+/).filter(Boolean).length;
+  $("#kComplete").textContent=pct+"%"; $("#pComplete").style.width=pct+"%";
+  $("#kCore").textContent=coreOk+"/6"; $("#kTasks").textContent=Math.round(done/tasks.length*100)+"%"; $("#kWords").textContent=words;
+  $("#jsonPreview").textContent=JSON.stringify(d,null,2);
+  if(updateFeedback && !$("#feedback").children.length) evaluate(false);
+}
+function showTab(id){
+  $$(".tab").forEach(x=>x.classList.toggle("active",x.id===id));
+  $$("#nav button").forEach(x=>x.classList.toggle("active",x.dataset.tab===id));
+  if(id==="dados") refresh(false);
+}
+$("#nav").addEventListener("click",e=>{const b=e.target.closest("button[data-tab]");if(b)showTab(b.dataset.tab)});
+$("#enterBtn").onclick=enter; $("#loadBtn").onclick=load;
+$("#saveTop").onclick=()=>save(true);
+$("#txtTop").onclick=()=>{const d=getProject();download((currentCode||"projeto")+".txt",asText(d),"text/plain;charset=utf-8")};
+$("#jsonTop").onclick=()=>{const d=getProject();download((currentCode||"projeto")+".json",JSON.stringify(d,null,2),"application/json")};
+$("#evaluateTop").onclick=()=>evaluate(true);
+
+buildForm(); buildTasks();
+
+if(currentCode){$("#studentCode").value=currentCode; $("#logged").textContent="logado: "+currentCode; const r=localStorage.getItem(key(currentCode)); if(r) applyProject(JSON.parse(r));}
+refresh(false);
+
+// desenho
+const canvas=$("#canvas"), ctx=canvas.getContext("2d"); let drawing=false,last=null;
+function canvasPoint(ev){
+  const r=canvas.getBoundingClientRect(), p=ev.touches?.[0]||ev;
+  return {x:(p.clientX-r.left)*(canvas.width/r.width),y:(p.clientY-r.top)*(canvas.height/r.height)}
+}
+function start(ev){drawing=true;last=canvasPoint(ev);ev.preventDefault()}
+function move(ev){if(!drawing)return;const p=canvasPoint(ev);ctx.strokeStyle=$("#penColor").value;ctx.lineWidth=4;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();last=p;drawDirty=true;ev.preventDefault()}
+function end(){drawing=false;last=null;autosave()}
+canvas.addEventListener("pointerdown",start);canvas.addEventListener("pointermove",move);window.addEventListener("pointerup",end);
+function clearCanvas(mark=true){ctx.fillStyle="#ffffff";ctx.fillRect(0,0,canvas.width,canvas.height);if(mark)drawDirty=true}
+function loadDrawing(src){const im=new Image();im.onload=()=>{clearCanvas(false);ctx.drawImage(im,0,0,canvas.width,canvas.height);drawDirty=false};im.src=src}
+clearCanvas(false);
+$("#clearCanvas").onclick=()=>{clearCanvas(true);autosave();toast("Desenho limpo.")};
+$("#saveDrawing").onclick=()=>{drawDirty=true;save(true)};
+$("#downloadDrawing").onclick=()=>{const a=document.createElement("a");a.href=canvas.toDataURL("image/png");a.download=(currentCode||"desenho")+".png";a.click()};
+$("#copyJson").onclick=async()=>{await navigator.clipboard.writeText(JSON.stringify(getProject(),null,2));toast("JSON copiado.")};
+$("#importJson").onclick=()=>$("#jsonFile").click();
+$("#jsonFile").onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const d=JSON.parse(await file.text());if(d.studentCode){currentCode=d.studentCode;$("#studentCode").value=currentCode;$("#logged").textContent="logado: "+currentCode}applyProject(d);save(false);toast("JSON importado.")}catch{toast("JSON inválido.")}e.target.value=""};
+</script>
 </body>
 </html>
