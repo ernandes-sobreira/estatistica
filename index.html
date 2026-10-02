@@ -106,6 +106,7 @@ canvas{display:block;width:100%;height:560px;touch-action:none}
     <div class="brand"><div class="logo">P</div><div><h1>Projeto em Ação</h1><small>Research Design Studio</small></div></div>
     <nav class="nav" id="nav">
       <button class="active" data-page="home"><span class="ico">⌂</span><span>Visão geral</span></button>
+      <button data-page="import"><span class="ico">↑</span><span>Importar Word/PDF</span></button>
       <button data-page="builder"><span class="ico">✎</span><span>Construir projeto</span></button>
       <button data-page="coherence"><span class="ico">◎</span><span>Coerência</span></button>
       <button data-page="ai"><span class="ico">✦</span><span>Avaliação com IA</span></button>
@@ -135,7 +136,8 @@ canvas{display:block;width:100%;height:560px;touch-action:none}
           <h2>Transforme uma ideia em um projeto científico consistente.</h2>
           <p>Organize pergunta, hipótese, objetivos, método, análise e resultados esperados em um fluxo único. A plataforma mostra o que falta e onde a lógica do projeto precisa ser fortalecida.</p>
           <div class="hero-actions">
-            <button class="btn light" data-go="builder">Começar a construir</button>
+            <button class="btn light" data-go="builder">Começar do zero</button>
+            <button class="btn ghost" data-go="import">Importar Word/PDF</button>
             <button class="btn ghost" data-go="coherence">Ver coerência</button>
           </div>
         </div>
@@ -148,6 +150,38 @@ canvas{display:block;width:100%;height:560px;touch-action:none}
         <div class="card pad"><h3>1. Estruture</h3><p>Defina o problema, a pergunta científica e as hipóteses sem dispersão.</p><div class="progress"><i id="homeP1"></i></div></div>
         <div class="card pad"><h3>2. Alinhe</h3><p>Confira se objetivos, método e análise respondem realmente à pergunta.</p><div class="progress"><i id="homeP2"></i></div></div>
         <div class="card pad"><h3>3. Execute</h3><p>Converta o projeto em tarefas, registre esquemas e exporte o material final.</p><div class="progress"><i id="homeP3"></i></div></div>
+      </div>
+    </section>
+
+    <section class="page" id="import">
+      <div class="section-head"><div><h2>Importar projeto existente</h2><p>Envie um Word ou PDF. A plataforma extrai o texto, organiza as partes do projeto e mostra o que precisa melhorar.</p></div></div>
+      <div class="card pad" style="max-width:980px">
+        <div id="dropZone" style="border:2px dashed #cfd6e3;border-radius:18px;padding:34px;text-align:center;background:#fafbfc">
+          <div style="font-size:34px;margin-bottom:10px">↑</div>
+          <h3 style="font-size:19px;margin:0 0 6px">Arraste seu projeto aqui</h3>
+          <p style="color:var(--muted);font-size:13px;margin:0 0 16px">Aceita .docx e .pdf com texto selecionável.</p>
+          <button class="btn accent" id="chooseProjectFile">Selecionar arquivo</button>
+          <input id="projectFile" type="file" accept=".docx,.pdf,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
+        </div>
+        <div id="importProgress" style="display:none;margin-top:16px">
+          <div style="display:flex;justify-content:space-between;gap:12px;font-size:13px"><b id="importStatus">Lendo arquivo...</b><span id="importPercent">0%</span></div>
+          <div class="progress" style="margin-top:8px"><i id="importBar"></i></div>
+        </div>
+        <div id="importResult" style="display:none;margin-top:18px">
+          <div class="callout" id="importSummary"></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+            <button class="btn accent" id="organizeAI">Organizar automaticamente</button>
+            <button class="btn" id="reviewImported">Revisar campos</button>
+            <button class="btn" id="evaluateImported">Avaliar melhorias</button>
+          </div>
+          <div style="margin-top:16px">
+            <details>
+              <summary style="cursor:pointer;font-weight:800">Ver texto extraído</summary>
+              <pre id="extractedText" style="margin-top:10px;max-height:360px;overflow:auto;white-space:pre-wrap;background:#f7f8fa;color:#344054;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:12px"></pre>
+            </details>
+          </div>
+        </div>
+        <div class="callout" style="margin-top:16px"><b>PDF escaneado:</b> se o arquivo for apenas uma imagem, sem texto selecionável, esta versão não consegue ler automaticamente. Nesse caso será necessário OCR.</div>
       </div>
     </section>
 
@@ -367,6 +401,133 @@ $("#importJson").onclick=()=>$("#jsonFile").click();
 $("#jsonFile").onchange=async e=>{const file=e.target.files[0];if(!file)return;try{state=JSON.parse(await file.text());localStorage.setItem("projeto-em-acao-v3",JSON.stringify(state));location.reload()}catch{toast("Arquivo JSON inválido.")}};
 </script>
 
+<script>
+let importedText = "";
+
+function setImportProgress(show,status,pct){
+  const wrap=document.querySelector("#importProgress");
+  if(!wrap)return;
+  wrap.style.display=show?"block":"none";
+  if(status)document.querySelector("#importStatus").textContent=status;
+  if(typeof pct==="number"){
+    document.querySelector("#importPercent").textContent=Math.round(pct)+"%";
+    document.querySelector("#importBar").style.width=Math.max(0,Math.min(100,pct))+"%";
+  }
+}
+function cleanExtractedText(t){
+  return String(t||"")
+    .replace(/\u0000/g," ")
+    .replace(/[ \t]+\n/g,"\n")
+    .replace(/\n{4,}/g,"\n\n")
+    .replace(/[ \t]{2,}/g," ")
+    .trim();
+}
+async function readDocx(file){
+  const buf=await file.arrayBuffer();
+  const mod=await import("https://cdn.jsdelivr.net/npm/mammoth@1.10.0/+esm");
+  const result=await mod.extractRawText({arrayBuffer:buf});
+  return cleanExtractedText(result.value);
+}
+async function readPdf(file){
+  const pdfjs=await import("https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs");
+  pdfjs.GlobalWorkerOptions.workerSrc="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs";
+  const data=new Uint8Array(await file.arrayBuffer());
+  const pdf=await pdfjs.getDocument({data}).promise;
+  const pages=[];
+  for(let i=1;i<=pdf.numPages;i++){
+    setImportProgress(true,"Extraindo texto do PDF — página "+i+" de "+pdf.numPages,10+(i/pdf.numPages)*70);
+    const page=await pdf.getPage(i);
+    const content=await page.getTextContent();
+    pages.push(content.items.map(x=>x.str).join(" "));
+  }
+  return cleanExtractedText(pages.join("\n\n"));
+}
+function sectionByHeadings(text, headings){
+  const lines=text.split(/\n+/);
+  const norm=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
+  const hs=headings.map(norm);
+  let start=-1;
+  for(let i=0;i<lines.length;i++){
+    const n=norm(lines[i]);
+    if(hs.some(h=>n===h || n.startsWith(h+" ") || n.startsWith(h+":"))){start=i+1;break}
+  }
+  if(start<0)return "";
+  const out=[];
+  const common=["resumo","abstract","introducao","justificativa","problema","questao de pesquisa","pergunta cientifica","hipotese","hipoteses","objetivo geral","objetivos","metodologia","metodo","materiais e metodos","analise de dados","analises estatisticas","resultados esperados","limitacoes","cronograma","referencias","referencias bibliograficas"];
+  for(let i=start;i<lines.length && out.join(" ").length<5000;i++){
+    const n=norm(lines[i]);
+    if(i>start && common.some(h=>n===h || n.startsWith(h+":")))break;
+    if(lines[i].trim())out.push(lines[i].trim());
+  }
+  return out.join("\n").trim();
+}
+function heuristicProject(text){
+  const f={};
+  f.proposito=sectionByHeadings(text,["justificativa","relevância","relevancia"]);
+  f.pergunta=sectionByHeadings(text,["pergunta científica","pergunta cientifica","questão de pesquisa","questao de pesquisa","problema de pesquisa"]);
+  f.hipoteses=sectionByHeadings(text,["hipóteses","hipoteses","hipótese","hipotese"]);
+  f.objetivos=sectionByHeadings(text,["objetivos","objetivo geral"]);
+  f.metodo=sectionByHeadings(text,["metodologia","método","metodo","materiais e métodos","materiais e metodos"]);
+  f.analise=sectionByHeadings(text,["análise de dados","analise de dados","análises estatísticas","analises estatisticas","tratamento dos dados"]);
+  f.resultado=sectionByHeadings(text,["resultados esperados","resultado esperado"]);
+  f.limitacoes=sectionByHeadings(text,["limitações","limitacoes","limitações do estudo","limitacoes do estudo"]);
+  f.referencia=sectionByHeadings(text,["referencial teórico","referencial teorico","fundamentação teórica","fundamentacao teorica"]);
+  const titleLines=text.split(/\n+/).map(x=>x.trim()).filter(Boolean).slice(0,8);
+  f.tema=titleLines.find(x=>x.length>15 && x.length<220)||"";
+  return f;
+}
+function applyImportedFields(fields){
+  let count=0;
+  for(const [k,v] of Object.entries(fields||{})){
+    if(v && typeof v==="string" && v.trim()){
+      state.fields[k]=v.trim();
+      count++;
+    }
+  }
+  save(false);
+  buildStep();
+  update();
+  return count;
+}
+async function handleProjectFile(file){
+  if(!file)return;
+  setImportProgress(true,"Lendo "+file.name,5);
+  document.querySelector("#importResult").style.display="none";
+  try{
+    const lower=file.name.toLowerCase();
+    if(lower.endsWith(".docx")) importedText=await readDocx(file);
+    else if(lower.endsWith(".pdf")) importedText=await readPdf(file);
+    else throw new Error("Formato não suportado.");
+    if(importedText.length<80) throw new Error("Pouco ou nenhum texto foi encontrado. O PDF pode estar escaneado.");
+    setImportProgress(true,"Identificando as partes do projeto...",90);
+    const found=applyImportedFields(heuristicProject(importedText));
+    document.querySelector("#extractedText").textContent=importedText;
+    document.querySelector("#importSummary").innerHTML="<b>Arquivo lido com sucesso.</b> Foram extraídos "+importedText.split(/\s+/).filter(Boolean).length.toLocaleString("pt-BR")+" termos. "+found+" campos foram reconhecidos imediatamente por títulos/seções. Clique em <b>Organizar automaticamente</b> para a IA tentar classificar também o conteúdo sem títulos padronizados.";
+    document.querySelector("#importResult").style.display="block";
+    setImportProgress(true,"Importação concluída",100);
+    toast("Projeto importado.");
+  }catch(err){
+    console.error(err);
+    setImportProgress(true,"Não foi possível ler o arquivo",0);
+    document.querySelector("#importResult").style.display="block";
+    document.querySelector("#importSummary").innerHTML="<b>Falha na leitura.</b> "+(err?.message||"Verifique o arquivo.");
+    document.querySelector("#extractedText").textContent="";
+  }
+}
+const choose=document.querySelector("#chooseProjectFile");
+const input=document.querySelector("#projectFile");
+const zone=document.querySelector("#dropZone");
+if(choose&&input){
+ choose.onclick=()=>input.click();
+ input.onchange=e=>handleProjectFile(e.target.files?.[0]);
+ zone.ondragover=e=>{e.preventDefault();zone.style.borderColor="#4f7cff"};
+ zone.ondragleave=()=>zone.style.borderColor="#cfd6e3";
+ zone.ondrop=e=>{e.preventDefault();zone.style.borderColor="#cfd6e3";handleProjectFile(e.dataTransfer.files?.[0])};
+}
+document.querySelector("#reviewImported").onclick=()=>showPage("builder");
+document.querySelector("#evaluateImported").onclick=()=>{showPage("coherence");evaluate()};
+</script>
+
 <script type="module">
 let aiPipe = null;
 let aiLoading = false;
@@ -407,6 +568,53 @@ async function getAI(){
     aiLoading = false;
   }
 }
+
+function extractJsonObject(text){
+  const raw=String(text||"").replace(/\x60\x60\x60json/gi,"").replace(/\x60\x60\x60/g,"");
+  const a=raw.indexOf("{"), b=raw.lastIndexOf("}");
+  if(a<0||b<=a)throw new Error("A IA não retornou JSON válido.");
+  return JSON.parse(raw.slice(a,b+1));
+}
+
+async function organizeImportedWithAI(){
+  const btn=document.querySelector("#organizeAI");
+  const status=document.querySelector("#importStatus");
+  if(!importedText || importedText.length<80){toast("Importe primeiro um Word ou PDF.");return}
+  btn.disabled=true;btn.textContent="Organizando...";
+  setImportProgress(true,"Preparando IA local...",92);
+  try{
+    const pipe=await getAI();
+    const excerpt=importedText.slice(0,26000);
+    const prompt=`Leia o texto de um projeto científico e extraia SOMENTE informações que estejam realmente presentes.
+Retorne APENAS JSON válido, sem markdown, com estas chaves:
+tema, proposito, referencia, pergunta, hipoteses, objetivos, metodo, analise, resultado, limitacoes, impacto.
+Se uma informação não estiver presente, use string vazia.
+Não invente dados, hipóteses, métodos ou resultados.
+Mantenha o conteúdo em português e resuma apenas quando necessário para caber.
+
+TEXTO:
+${excerpt}`;
+    status.textContent="A IA está identificando as partes do projeto...";
+    const result=await pipe([
+      {role:"system",content:"Você extrai estrutura de projetos científicos sem inventar conteúdo e responde JSON válido."},
+      {role:"user",content:prompt}
+    ],{max_new_tokens:1100,do_sample:false,repetition_penalty:1.05});
+    const gen=result?.[0]?.generated_text;
+    const txt=Array.isArray(gen)?(gen[gen.length-1]?.content||""):String(gen||"");
+    const obj=extractJsonObject(txt);
+    const n=applyImportedFields(obj);
+    document.querySelector("#importSummary").innerHTML="<b>Organização com IA concluída.</b> "+n+" campos foram preenchidos ou refinados a partir do conteúdo do documento. Revise os campos antes de considerar a extração definitiva.";
+    setImportProgress(true,"Projeto organizado com IA",100);
+    toast("Estrutura identificada pela IA.");
+  }catch(err){
+    console.error(err);
+    document.querySelector("#importSummary").innerHTML="<b>A organização por IA não foi concluída.</b> A extração por títulos continua disponível. Tente novamente ou revise os campos manualmente.";
+    setImportProgress(true,"IA local indisponível para esta importação",100);
+  }finally{
+    btn.disabled=false;btn.textContent="Organizar automaticamente";
+  }
+}
+document.querySelector("#organizeAI")?.addEventListener("click",organizeImportedWithAI);
 
 async function runAIReview(){
   const btn=document.querySelector("#runAI");
