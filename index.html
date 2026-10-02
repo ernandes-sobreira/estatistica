@@ -108,6 +108,7 @@ canvas{display:block;width:100%;height:560px;touch-action:none}
       <button class="active" data-page="home"><span class="ico">⌂</span><span>Visão geral</span></button>
       <button data-page="builder"><span class="ico">✎</span><span>Construir projeto</span></button>
       <button data-page="coherence"><span class="ico">◎</span><span>Coerência</span></button>
+      <button data-page="ai"><span class="ico">✦</span><span>Avaliação com IA</span></button>
       <button data-page="tasks"><span class="ico">✓</span><span>Planejamento</span></button>
       <button data-page="draw"><span class="ico">⌁</span><span>Desenho</span></button>
       <button data-page="export"><span class="ico">⇩</span><span>Exportar</span></button>
@@ -168,6 +169,27 @@ canvas{display:block;width:100%;height:560px;touch-action:none}
           <div class="progress"><i id="scoreProgress"></i></div>
         </div>
         <div class="feedback" id="feedback"></div>
+      </div>
+    </section>
+
+    <section class="page" id="ai">
+      <div class="section-head"><div><h2>Avaliação com IA</h2><p>Parecer qualitativo sobre a lógica científica do projeto.</p></div></div>
+      <div class="coherence-grid">
+        <div class="score-panel">
+          <div class="badge good">IA local • gratuito</div>
+          <div style="font-size:20px;font-weight:900;margin:14px 0 8px">Qwen 2.5 Instruct</div>
+          <p style="color:var(--muted);line-height:1.5">A análise roda no seu próprio navegador. Nenhuma chave de API é necessária e o texto do projeto não precisa ser enviado para um servidor de IA.</p>
+          <div class="callout" style="margin-top:14px">Na primeira execução, o navegador baixa o modelo. Isso pode levar alguns minutos e consumir algumas centenas de MB. Depois, o navegador pode reutilizar o cache.</div>
+          <button class="btn accent" id="runAI" style="margin-top:16px;width:100%">Analisar meu projeto com IA</button>
+          <div id="aiStatus" style="margin-top:12px;font-size:12px;color:var(--muted)">IA ainda não carregada.</div>
+        </div>
+        <div>
+          <div class="card pad" style="min-height:440px">
+            <h3 style="font-size:18px">Parecer da IA</h3>
+            <p style="color:var(--muted);font-size:13px">A avaliação considera coerência entre pergunta, hipótese, objetivos, método, análise e resultado esperado.</p>
+            <div id="aiResult" style="white-space:pre-wrap;line-height:1.65;font-size:14px;margin-top:16px;color:#2a3543">Preencha seu projeto e clique em “Analisar meu projeto com IA”.</div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -344,5 +366,101 @@ $("#downloadJson").onclick=()=>download("projeto-em-acao.json",JSON.stringify(st
 $("#importJson").onclick=()=>$("#jsonFile").click();
 $("#jsonFile").onchange=async e=>{const file=e.target.files[0];if(!file)return;try{state=JSON.parse(await file.text());localStorage.setItem("projeto-em-acao-v3",JSON.stringify(state));location.reload()}catch{toast("Arquivo JSON inválido.")}};
 </script>
+
+<script type="module">
+let aiPipe = null;
+let aiLoading = false;
+
+function aiProjectText(){
+  const f = state.fields || {};
+  return [
+    ["Tema",f.tema],["Propósito",f.proposito],["Pergunta científica",f.pergunta],
+    ["Hipóteses",f.hipoteses],["Objetivos",f.objetivos],["Método",f.metodo],
+    ["Plano de análise",f.analise],["Resultado esperado",f.resultado],
+    ["Limitações",f.limitacoes],["Impacto",f.impacto]
+  ].map(([k,v])=>k+":\n"+(v||"[não preenchido]")).join("\n\n");
+}
+
+async function getAI(){
+  if(aiPipe) return aiPipe;
+  if(aiLoading) throw new Error("A IA já está sendo carregada.");
+  aiLoading = true;
+  const status = document.querySelector("#aiStatus");
+  try{
+    status.textContent = "Carregando biblioteca de IA...";
+    const { pipeline } = await import("https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1");
+    status.textContent = "Baixando/carregando o modelo local. Na primeira vez isso pode demorar...";
+    aiPipe = await pipeline("text-generation","onnx-community/Qwen2.5-0.5B-Instruct",{
+      dtype:"q4",
+      device:("gpu" in navigator) ? "webgpu" : "wasm",
+      progress_callback:(p)=>{
+        if(p && p.status==="progress" && typeof p.progress==="number"){
+          status.textContent = "Carregando IA: "+Math.round(p.progress)+"%";
+        } else if(p && p.file){
+          status.textContent = "Preparando modelo: "+p.file;
+        }
+      }
+    });
+    status.textContent = "IA pronta para analisar.";
+    return aiPipe;
+  } finally {
+    aiLoading = false;
+  }
+}
+
+async function runAIReview(){
+  const btn=document.querySelector("#runAI");
+  const status=document.querySelector("#aiStatus");
+  const out=document.querySelector("#aiResult");
+  const m=metrics();
+  if(m.coreOk < 3){
+    out.textContent="Preencha pelo menos três dos seis eixos essenciais antes da avaliação com IA: pergunta, hipóteses, objetivos, método, análise e resultado esperado.";
+    return;
+  }
+  btn.disabled=true; btn.textContent="Analisando...";
+  out.textContent="Preparando avaliação...";
+  try{
+    const pipe=await getAI();
+    const prompt = `Você é um orientador científico experiente. Avalie o projeto abaixo em português do Brasil.
+Seja objetivo, rigoroso e útil. Não invente referências nem dados.
+Analise SOMENTE o que foi fornecido.
+
+Entregue exatamente estas seções:
+1. SÍNTESE DO PROJETO
+2. PONTOS FORTES
+3. INCONSISTÊNCIAS OU LACUNAS
+4. COERÊNCIA: pergunta → hipótese → objetivos → método → análise → resultado esperado
+5. TRÊS MELHORIAS PRIORITÁRIAS
+6. PERGUNTAS QUE O ORIENTADOR DEVERIA FAZER
+
+Projeto:
+${aiProjectText()}`;
+    status.textContent="A IA está redigindo o parecer...";
+    const messages=[
+      {role:"system",content:"Você avalia projetos científicos com rigor metodológico e escreve em português brasileiro."},
+      {role:"user",content:prompt}
+    ];
+    const result=await pipe(messages,{max_new_tokens:700,do_sample:false,repetition_penalty:1.08});
+    let text="";
+    if(Array.isArray(result) && result[0]){
+      const gen=result[0].generated_text;
+      if(Array.isArray(gen)){
+        const last=gen[gen.length-1];
+        text=last?.content||JSON.stringify(last);
+      } else text=String(gen||"");
+    }
+    out.textContent=text.trim()||"A IA não retornou texto. Tente novamente.";
+    status.textContent="Avaliação concluída localmente.";
+  }catch(err){
+    console.error(err);
+    status.textContent="Não foi possível executar a IA local neste navegador.";
+    out.textContent="A IA local não conseguiu iniciar. Isso pode acontecer quando WebGPU/WASM, memória ou o download do modelo são bloqueados. A avaliação automática tradicional da aba Coerência continua funcionando.";
+  }finally{
+    btn.disabled=false; btn.textContent="Analisar meu projeto com IA";
+  }
+}
+document.querySelector("#runAI").addEventListener("click",runAIReview);
+</script>
+
 </body>
 </html>
