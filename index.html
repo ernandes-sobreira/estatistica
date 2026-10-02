@@ -442,39 +442,101 @@ async function readPdf(file){
   }
   return cleanExtractedText(pages.join("\n\n"));
 }
+
+function normHeading(s){
+  return String(s||"")
+    .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+    .toLowerCase()
+    .replace(/^\s*(?:[ivxlcdm]+|\d+)\s*[-–—.:)]*\s*/i,"")
+    .replace(/^\s*[•·▪◦]+\s*/,"")
+    .replace(/\s+/g," ")
+    .trim();
+}
+function isKnownHeading(line){
+  const n=normHeading(line);
+  const common=[
+    "identificacao","resumo","abstract","introducao","justificativa","relevancia",
+    "problema","problema de pesquisa","questao de pesquisa","pergunta cientifica",
+    "hipotese","hipoteses","objetivo","objetivo geral","objetivos","objetivos geral e especificos",
+    "metodologia","metodo","material e metodos","materiais e metodos",
+    "analise de dados","analises estatisticas","tratamento dos dados",
+    "resultados esperados","resultado esperado","limitacoes","limitacoes do estudo",
+    "cronograma","cronograma de atividades","referencias","referencias bibliograficas"
+  ];
+  return common.some(h=>n===h || n.startsWith(h+" ") || n.startsWith(h+" ("));
+}
 function sectionByHeadings(text, headings){
-  const lines=text.split(/\n+/);
-  const norm=s=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim();
-  const hs=headings.map(norm);
+  const lines=String(text||"").split(/\n+/);
+  const hs=headings.map(normHeading);
   let start=-1;
   for(let i=0;i<lines.length;i++){
-    const n=norm(lines[i]);
-    if(hs.some(h=>n===h || n.startsWith(h+" ") || n.startsWith(h+":"))){start=i+1;break}
+    const n=normHeading(lines[i]);
+    if(hs.some(h=>n===h || n.startsWith(h+" ") || n.startsWith(h+" (") || n.startsWith(h+":"))){
+      start=i+1; break;
+    }
   }
   if(start<0)return "";
   const out=[];
-  const common=["resumo","abstract","introducao","justificativa","problema","questao de pesquisa","pergunta cientifica","hipotese","hipoteses","objetivo geral","objetivos","metodologia","metodo","materiais e metodos","analise de dados","analises estatisticas","resultados esperados","limitacoes","cronograma","referencias","referencias bibliograficas"];
-  for(let i=start;i<lines.length && out.join(" ").length<5000;i++){
-    const n=norm(lines[i]);
-    if(i>start && common.some(h=>n===h || n.startsWith(h+":")))break;
-    if(lines[i].trim())out.push(lines[i].trim());
+  for(let i=start;i<lines.length && out.join(" ").length<6500;i++){
+    if(i>start && isKnownHeading(lines[i])) break;
+    const line=lines[i].trim();
+    if(line) out.push(line);
   }
   return out.join("\n").trim();
 }
+function extractNamedValue(text,label){
+  const nl=normHeading(label);
+  const lines=String(text||"").split(/\n+/);
+  for(const raw of lines){
+    const pos=raw.indexOf(":");
+    if(pos<0) continue;
+    const left=normHeading(raw.slice(0,pos));
+    if(left===nl || left.endsWith(nl)) return raw.slice(pos+1).trim();
+  }
+  return "";
+}
 function heuristicProject(text){
   const f={};
+  f.tema=extractNamedValue(text,"NOME DO SUBPROJETO DO(A) BOLSISTA")
+      || extractNamedValue(text,"TÍTULO")
+      || extractNamedValue(text,"TITULO");
   f.proposito=sectionByHeadings(text,["justificativa","relevância","relevancia"]);
   f.pergunta=sectionByHeadings(text,["pergunta científica","pergunta cientifica","questão de pesquisa","questao de pesquisa","problema de pesquisa"]);
   f.hipoteses=sectionByHeadings(text,["hipóteses","hipoteses","hipótese","hipotese"]);
-  f.objetivos=sectionByHeadings(text,["objetivos","objetivo geral"]);
-  f.metodo=sectionByHeadings(text,["metodologia","método","metodo","materiais e métodos","materiais e metodos"]);
+  f.objetivos=sectionByHeadings(text,["objetivos","objetivos (geral e específicos)","objetivos (geral e especificos)","objetivo geral"]);
+  f.metodo=sectionByHeadings(text,["metodologia","método","metodo","material e métodos","material e metodos","materiais e métodos","materiais e metodos"]);
   f.analise=sectionByHeadings(text,["análise de dados","analise de dados","análises estatísticas","analises estatisticas","tratamento dos dados"]);
+  if(!f.analise && f.metodo){
+    const lines=f.metodo.split(/\n+/);
+    const hit=lines.find(x=>/(os dados|dados obtidos).*(analisad|comparad|estatíst|estatist)/i.test(x));
+    if(hit) f.analise=hit.trim();
+  }
   f.resultado=sectionByHeadings(text,["resultados esperados","resultado esperado"]);
   f.limitacoes=sectionByHeadings(text,["limitações","limitacoes","limitações do estudo","limitacoes do estudo"]);
   f.referencia=sectionByHeadings(text,["referencial teórico","referencial teorico","fundamentação teórica","fundamentacao teorica"]);
-  const titleLines=text.split(/\n+/).map(x=>x.trim()).filter(Boolean).slice(0,8);
-  f.tema=titleLines.find(x=>x.length>15 && x.length<220)||"";
+  if(!f.tema){
+    const titleLines=String(text||"").split(/\n+/).map(x=>x.trim()).filter(Boolean).slice(0,18);
+    f.tema=titleLines.find(x=>x.length>25 && x.length<220 && !/modelo|anexo|estado|secretaria|universidade/i.test(x))||"";
+  }
   return f;
+}
+function diagnoseImported(fields){
+  const notes=[];
+  const missing=[
+    ["pergunta","Pergunta científica"],["hipoteses","Hipóteses"],
+    ["objetivos","Objetivos"],["metodo","Método"],["analise","Análise dos dados"],
+    ["resultado","Resultados esperados"]
+  ].filter(x=>!(fields[x[0]]||"").trim()).map(x=>x[1]);
+  if(missing.length) notes.push("<b>Não encontrei explicitamente:</b> "+missing.join(", ")+".");
+  if((fields.objetivos||"").trim()){
+    const obj=fields.objetivos.toLowerCase();
+    const objectiveVerb=/(avaliar|analisar|investigar|determinar|comparar|verificar|identificar|quantificar|caracterizar|estimar|mensurar|testar|descrever)/i.test(obj);
+    const justificationLike=/(se justifica|necessidade|importante|contribui|contribuindo|resultados poderao|resultados poderão)/i.test(obj);
+    if(!objectiveVerb || justificationLike){
+      notes.push("<b>Atenção aos objetivos:</b> existe uma seção com esse título, mas o conteúdo parece justificativa/contextualização, não objetivos formulados com verbos de ação.");
+    }
+  }
+  return notes;
 }
 function applyImportedFields(fields){
   let count=0;
@@ -500,9 +562,11 @@ async function handleProjectFile(file){
     else throw new Error("Formato não suportado.");
     if(importedText.length<80) throw new Error("Pouco ou nenhum texto foi encontrado. O PDF pode estar escaneado.");
     setImportProgress(true,"Identificando as partes do projeto...",90);
-    const found=applyImportedFields(heuristicProject(importedText));
+    const parsed=heuristicProject(importedText);
+    const found=applyImportedFields(parsed);
+    const notes=diagnoseImported(parsed);
     document.querySelector("#extractedText").textContent=importedText;
-    document.querySelector("#importSummary").innerHTML="<b>Arquivo lido com sucesso.</b> Foram extraídos "+importedText.split(/\s+/).filter(Boolean).length.toLocaleString("pt-BR")+" termos. "+found+" campos foram reconhecidos imediatamente por títulos/seções. Clique em <b>Organizar automaticamente</b> para a IA tentar classificar também o conteúdo sem títulos padronizados.";
+    document.querySelector("#importSummary").innerHTML="<b>Arquivo lido com sucesso.</b> Foram extraídas "+importedText.split(/\s+/).filter(Boolean).length.toLocaleString("pt-BR")+" palavras. "+found+" partes foram reconhecidas automaticamente."+(notes.length?"<br><br>"+notes.join("<br>"):"")+"<br><br>Clique em <b>Organizar automaticamente</b> para a IA tentar classificar também conteúdos sem títulos padronizados.";
     document.querySelector("#importResult").style.display="block";
     setImportProgress(true,"Importação concluída",100);
     toast("Projeto importado.");
